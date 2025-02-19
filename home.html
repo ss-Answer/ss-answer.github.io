@@ -1,96 +1,106 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>ssAnswer</title>
-        <link rel="stylesheet" href="css/home.css">
-    </head>
-    <body>
-        <h1 id="title">SS-Answer.github.io</h1>
-        <h1 id="subtitle">ad-free answers sharing website</h1>
-        <div id="search-bar">
-            <input type="text" id="search-input" placeholder="Search for files..." oninput="filterFiles()">
-        </div>
-        <div id="file-tree"></div>
-        <div id="file-content" style="display: none;">
-            <h2 id="current-file-title"></h2>
-            <pre id="current-file-content"></pre>
-        </div>
-        <script>
-            let allFiles = [];
+<head>
+    <title>ssAnswer</title>
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+    <h1 id="title">SS-Answer.github.io</h1>
+    <h1 id="subtitle">ad-free answers sharing website</h1>
+    <div id="search-bar">
+        <input type="text" id="search-input" placeholder="Search for files..." oninput="filterFiles()">
+    </div>
+    <div id="search-results"></div>
+    <div id="file-tree"></div>
+    <div id="file-content" style="display: none;">
+        <h2 id="current-file-title"></h2>
+        <pre id="current-file-content"></pre>
+    </div>
+    <script>
+        let allFiles = [];
+        let baseFolderPath = 'db/';
 
-            async function loadFiles() {
-                try {
-                    const response = await fetch('files.json');
-                    if (!response.ok) throw new Error('Could not fetch files.json');
-                    const data = await response.json();
+        async function loadFiles() {
+            try {
+                const response = await fetch('files.json');
+                if (!response.ok) throw new Error('Could not fetch files.json');
+                const data = await response.json();
 
-                    const folderName = Object.keys(data.s1.en)[0];
-                    allFiles = data.s1.en[folderName];
+                const folderName = Object.keys(data.s1.en)[0];
+                allFiles = data.s1.en[folderName];
 
-                    const fileTree = document.getElementById('file-tree');
-                    const folderElement = createFolderElement(folderName, allFiles);
-                    fileTree.appendChild(folderElement);
-                } catch (error) {
-                    console.error(error);
-                    alert('Error loading files: ' + error.message);
-                }
-            }
-
-            function createFolderElement(folderName, files) {
-                const folder = document.createElement('div');
-                const folderLabel = document.createElement('span');
-                folderLabel.textContent = `${folderName} >`;
-                folderLabel.classList.add('folder');
-                folderLabel.onclick = () => toggleFolder(folderContent);
-
-                const folderContent = document.createElement('ul');
-                folderContent.classList.add('hidden');
-
-                files.forEach(fileName => {
-                    const listItem = document.createElement('li');
-                    const fileLabel = document.createElement('span');
-                    fileLabel.textContent = fileName;
-                    fileLabel.classList.add('file');
-                    fileLabel.onclick = (e) => {
-                        e.stopPropagation();
-                        loadText(fileName, folderName);
-                    };
-                    listItem.appendChild(fileLabel);
-                    folderContent.appendChild(listItem);
-                });
-
-                folder.appendChild(folderLabel);
-                folder.appendChild(folderContent);
-                return folder;
-            }
-
-            function toggleFolder(folderContent) {
-                folderContent.classList.toggle('hidden');
-            }
-
-            async function loadText(fileName, parentFolder) {
-                try {
-                    const response = await fetch(`db/s1/en/${parentFolder}/${fileName}`);
-                    if (!response.ok) throw new Error(`Could not fetch ${fileName}`);
-                    const text = await response.text();
-                    document.getElementById('current-file-title').textContent = `Currently opened: ${parentFolder}/${fileName}`;
-                    document.getElementById('current-file-content').textContent = text;
-                    document.getElementById('file-content').style.display = 'block';
-                } catch (error) {
-                    console.error(error);
-                    alert('Error loading file: ' + error.message);
-                }
-            }
-
-            function filterFiles() {
-                const query = document.getElementById('search-input').value.toLowerCase();
                 const fileTree = document.getElementById('file-tree');
-                fileTree.innerHTML = '';
-                const folderElement = createFolderElement('SIG1', allFiles.filter(file => file.toLowerCase().includes(query)));
+                const folderElement = createFolderElement(folderName, allFiles);
                 fileTree.appendChild(folderElement);
+            } catch (error) {
+                console.error(error);
+                alert('Error loading files: ' + error.message);
             }
+        }
 
-            loadFiles();
-        </script>
-    </body>
+        function createFolderElement(folderName, files) {
+            const folder = document.createElement('div');
+            const folderLabel = document.createElement('span');
+            folderLabel.textContent = `${folderName} >`;
+            folderLabel.classList.add('folder');
+            folderLabel.onclick = () => toggleFolder(folderContent);
+
+            const folderContent = document.createElement('ul');
+            folderContent.classList.add('hidden');
+
+            files.forEach(fileName => {
+                const listItem = document.createElement('li');
+                const fileLabel = document.createElement('span');
+                fileLabel.textContent = fileName;
+                fileLabel.classList.add('file');
+                fileLabel.onclick = (e) => {
+                    e.stopPropagation();
+                    loadText(fileName, folderName); // Use dynamic loading
+                };
+                listItem.appendChild(fileLabel);
+                folderContent.appendChild(listItem);
+            });
+
+            folder.appendChild(folderLabel);
+            folder.appendChild(folderContent);
+            return folder;
+        }
+
+        function toggleFolder(folderContent) {
+            folderContent.classList.toggle('hidden');
+        }
+
+        async function loadText(fileName, parentFolder) {
+            const filePath = `${baseFolderPath}${parentFolder}/${fileName}`;
+            try {
+                const response = await fetch(filePath);
+                if (!response.ok) throw new Error(`Could not fetch ${fileName}`);
+                const text = await response.text();
+                document.getElementById('current-file-title').textContent = `Currently opened: ${parentFolder}/${fileName}`;
+                document.getElementById('current-file-content').textContent = text;
+                document.getElementById('file-content').style.display = 'block';
+            } catch (error) {
+                console.error(error);
+                alert('Error loading file: ' + error.message);
+            }
+        }
+
+        function filterFiles() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+            const filteredFiles = allFiles.filter(file => file.toLowerCase().includes(query));
+
+            filteredFiles.forEach(file => {
+                const resultItem = document.createElement('div');
+                resultItem.textContent = file;
+                resultItem.classList.add('search-result');
+                resultItem.onclick = () => loadText(file, 'SIG1');
+                searchResults.appendChild(resultItem);
+            });
+        }
+
+        loadFiles();
+    </script>
+</body>
 </html>
