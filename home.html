@@ -7,12 +7,17 @@
     <body>
         <h1 id="title">SS-Answer.github.io</h1>
         <h1 id="subtitle">ad-free answers sharing website</h1>
+        <div id="search-bar">
+            <input type="text" id="search-input" placeholder="Search for files..." oninput="filterFiles()">
+        </div>
         <div id="file-tree"></div>
         <div id="file-content" style="display: none;">
             <h2 id="current-file-title"></h2>
             <pre id="current-file-content"></pre>
         </div>
         <script>
+            let allFiles = [];
+
             async function loadFiles() {
                 try {
                     const response = await fetch('files.json');
@@ -20,10 +25,10 @@
                     const data = await response.json();
 
                     const folderName = Object.keys(data.s1.en)[0];
-                    const files = data.s1.en[folderName];
+                    allFiles = data.s1.en[folderName];
 
                     const fileTree = document.getElementById('file-tree');
-                    const folderElement = createFolderElement(folderName, files);
+                    const folderElement = createFolderElement(folderName, allFiles);
                     fileTree.appendChild(folderElement);
                 } catch (error) {
                     console.error(error);
@@ -75,6 +80,14 @@
                     console.error(error);
                     alert('Error loading file: ' + error.message);
                 }
+            }
+
+            function filterFiles() {
+                const query = document.getElementById('search-input').value.toLowerCase();
+                const fileTree = document.getElementById('file-tree');
+                fileTree.innerHTML = '';
+                const folderElement = createFolderElement('SIG1', allFiles.filter(file => file.toLowerCase().includes(query)));
+                fileTree.appendChild(folderElement);
             }
 
             loadFiles();
