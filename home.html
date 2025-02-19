@@ -3,19 +3,6 @@
     <head>
         <title>ssAnswer</title>
         <link rel="stylesheet" href="css/home.css">
-        <style>
-            ul {
-                list-style-type: none;
-                padding-left: 20px;
-            }
-            .folder {
-                cursor: pointer;
-                font-weight: bold;
-            }
-            .hidden {
-                display: none;
-            }
-        </style>
     </head>
     <body>
         <h1 id="title">SS-Answer.github.io</h1>
@@ -56,16 +43,18 @@
 
                 files.forEach(fileName => {
                     const listItem = document.createElement('li');
-                    listItem.textContent = fileName;
-                    listItem.onclick = (e) => {
-                        e.stopPropagation(); // Prevent toggling the folder when clicking a file
+                    const fileLabel = document.createElement('span');
+                    fileLabel.textContent = fileName;
+                    fileLabel.classList.add('file');
+                    fileLabel.onclick = (e) => {
+                        e.stopPropagation();
                         loadText(fileName, folderName);
                     };
+                    listItem.appendChild(fileLabel);
                     folderContent.appendChild(listItem);
                 });
 
                 folder.appendChild(folderLabel);
-                folder.appendChild(folderContent);
                 folder.appendChild(folderContent);
                 return folder;
             }
