@@ -30,11 +30,6 @@ li:hover {
     color: darkgray;
 }
 
-#text-display {
-    margin-top: 20px;
-    text-align: center;
-}
-
 .folder {
     cursor: pointer;
     font-weight: bold;

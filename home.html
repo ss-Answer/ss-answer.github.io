@@ -26,44 +26,48 @@
                 if (!response.ok) throw new Error('Could not fetch files.json');
                 const data = await response.json();
 
-                const folderName = Object.keys(data.s1.en)[0];
-                allFiles = data.s1.en[folderName];
-
                 const fileTree = document.getElementById('file-tree');
-                const folderElement = createFolderElement(folderName, allFiles);
-                fileTree.appendChild(folderElement);
+                createFolderStructure(data.s1.en, fileTree);
             } catch (error) {
                 console.error(error);
                 alert('Error loading files: ' + error.message);
             }
         }
 
-        function createFolderElement(folderName, files) {
-            const folder = document.createElement('div');
-            const folderLabel = document.createElement('span');
-            folderLabel.textContent = `${folderName} >`;
-            folderLabel.classList.add('folder');
-            folderLabel.onclick = () => toggleFolder(folderContent);
+        function createFolderStructure(folders, parentElement) {
+            for (const folderName in folders) {
+                const folder = document.createElement('div');
+                const folderLabel = document.createElement('span');
+                folderLabel.textContent = `${folderName} >`;
+                folderLabel.classList.add('folder');
+                folderLabel.onclick = () => toggleFolder(folderContent);
 
-            const folderContent = document.createElement('ul');
-            folderContent.classList.add('hidden');
+                const folderContent = document.createElement('ul');
+                folderContent.classList.add('hidden');
 
-            files.forEach(fileName => {
-                const listItem = document.createElement('li');
-                const fileLabel = document.createElement('span');
-                fileLabel.textContent = fileName;
-                fileLabel.classList.add('file');
-                fileLabel.onclick = (e) => {
-                    e.stopPropagation();
-                    loadText(fileName, folderName); // Use dynamic loading
-                };
-                listItem.appendChild(fileLabel);
-                folderContent.appendChild(listItem);
-            });
+                const files = folders[folderName];
 
-            folder.appendChild(folderLabel);
-            folder.appendChild(folderContent);
-            return folder;
+                if (Array.isArray(files)) {
+                    files.forEach(fileName => {
+                        const listItem = document.createElement('li');
+                        const fileLabel = document.createElement('span');
+                        fileLabel.textContent = fileName;
+                        fileLabel.classList.add('file');
+                        fileLabel.onclick = (e) => {
+                            e.stopPropagation();
+                            loadText(fileName, folderName);
+                        };
+                        listItem.appendChild(fileLabel);
+                        folderContent.appendChild(listItem);
+                    });
+                } else {
+                    createFolderStructure(files, folderContent); // Recursive call for subfolders
+                }
+
+                folder.appendChild(folderLabel);
+                folder.appendChild(folderContent);
+                parentElement.appendChild(folder);
+            }
         }
 
         function toggleFolder(folderContent) {
