@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ssAnswer</title>
+        <link rel="stylesheet" href="css/home.css">
+        <style>
+            ul {
+                list-style-type: none;
+                padding-left: 20px;
+            }
+            .folder {
+                cursor: pointer;
+                font-weight: bold;
+            }
+            .hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 id="title">SS-Answer.github.io</h1>
+        <h1 id="subtitle">ad-free answers sharing website</h1>
+        <div id="file-tree"></div>
+        <div id="file-content" style="display: none;">
+            <h2 id="current-file-title"></h2>
+            <pre id="current-file-content"></pre>
+        </div>
+        <script>
+            async function loadFiles() {
+                try {
+                    const response = await fetch('files.json');
+                    if (!response.ok) throw new Error('Could not fetch files.json');
+                    const data = await response.json();
+
+                    const folderName = Object.keys(data.s1.en)[0];
+                    const files = data.s1.en[folderName];
+
+                    const fileTree = document.getElementById('file-tree');
+                    const folderElement = createFolderElement(folderName, files);
+                    fileTree.appendChild(folderElement);
+                } catch (error) {
+                    console.error(error);
+                    alert('Error loading files: ' + error.message);
+                }
+            }
+
+            function createFolderElement(folderName, files) {
+                const folder = document.createElement('div');
+                const folderLabel = document.createElement('span');
+                folderLabel.textContent = `${folderName} >`;
+                folderLabel.classList.add('folder');
+                folderLabel.onclick = () => toggleFolder(folderContent);
+
+                const folderContent = document.createElement('ul');
+                folderContent.classList.add('hidden');
+
+                files.forEach(fileName => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = fileName;
+                    listItem.onclick = (e) => {
+                        e.stopPropagation(); // Prevent toggling the folder when clicking a file
+                        loadText(fileName, folderName);
+                    };
+                    folderContent.appendChild(listItem);
+                });
+
+                folder.appendChild(folderLabel);
+                folder.appendChild(folderContent);
+                folder.appendChild(folderContent);
+                return folder;
+            }
+
+            function toggleFolder(folderContent) {
+                folderContent.classList.toggle('hidden');
+            }
+
+            async function loadText(fileName, parentFolder) {
+                try {
+                    const response = await fetch(`db/s1/en/${parentFolder}/${fileName}`);
+                    if (!response.ok) throw new Error(`Could not fetch ${fileName}`);
+                    const text = await response.text();
+                    document.getElementById('current-file-title').textContent = `Currently opened: ${parentFolder}/${fileName}`;
+                    document.getElementById('current-file-content').textContent = text;
+                    document.getElementById('file-content').style.display = 'block';
+                } catch (error) {
+                    console.error(error);
+                    alert('Error loading file: ' + error.message);
+                }
+            }
+
+            loadFiles();
+        </script>
+    </body>
+</html>
