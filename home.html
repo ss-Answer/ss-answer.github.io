@@ -18,7 +18,7 @@
     </div>
     <script>
         let allFiles = [];
-        let baseFolderPath = 'db/';
+        let baseFolderPath = 'db/'; // Corrected base path
 
         async function loadFiles() {
             try {
@@ -26,8 +26,9 @@
                 if (!response.ok) throw new Error('Could not fetch files.json');
                 const data = await response.json();
 
+                // Create folder structure
                 const fileTree = document.getElementById('file-tree');
-                createFolderStructure(data.s1.en, fileTree);
+                createFolderStructure(data.s1, fileTree);
             } catch (error) {
                 console.error(error);
                 alert('Error loading files: ' + error.message);
@@ -35,19 +36,29 @@
         }
 
         function createFolderStructure(folders, parentElement) {
-            for (const folderName in folders) {
-                const folder = document.createElement('div');
-                const folderLabel = document.createElement('span');
-                folderLabel.textContent = `${folderName} >`;
-                folderLabel.classList.add('folder');
-                folderLabel.onclick = () => toggleFolder(folderContent);
+            for (const lang in folders) {
+                const langFolder = document.createElement('div');
+                const langLabel = document.createElement('span');
+                langLabel.textContent = `${lang} >`;
+                langLabel.classList.add('folder');
+                langLabel.onclick = () => toggleFolder(langFolderContent);
 
-                const folderContent = document.createElement('ul');
-                folderContent.classList.add('hidden');
+                const langFolderContent = document.createElement('ul');
+                langFolderContent.classList.add('hidden');
 
-                const files = folders[folderName];
+                const subFolders = folders[lang];
 
-                if (Array.isArray(files)) {
+                for (const folderName in subFolders) {
+                    const folder = document.createElement('div');
+                    const folderLabel = document.createElement('span');
+                    folderLabel.textContent = `${folderName} >`;
+                    folderLabel.classList.add('folder');
+                    folderLabel.onclick = () => toggleFolder(folderContent);
+
+                    const folderContent = document.createElement('ul');
+
+                    // Handle files in the folder
+                    const files = subFolders[folderName];
                     files.forEach(fileName => {
                         const listItem = document.createElement('li');
                         const fileLabel = document.createElement('span');
@@ -55,18 +66,21 @@
                         fileLabel.classList.add('file');
                         fileLabel.onclick = (e) => {
                             e.stopPropagation();
-                            loadText(fileName, folderName);
+                            loadText(fileName, folderName, lang); // Pass the language for correct path
                         };
                         listItem.appendChild(fileLabel);
                         folderContent.appendChild(listItem);
                     });
-                } else {
-                    createFolderStructure(files, folderContent); // Recursive call for subfolders
+
+                    // Add folder structure
+                    folder.appendChild(folderLabel);
+                    folder.appendChild(folderContent);
+                    langFolderContent.appendChild(folder);
                 }
 
-                folder.appendChild(folderLabel);
-                folder.appendChild(folderContent);
-                parentElement.appendChild(folder);
+                langFolder.appendChild(langLabel);
+                langFolder.appendChild(langFolderContent);
+                parentElement.appendChild(langFolder);
             }
         }
 
@@ -74,13 +88,13 @@
             folderContent.classList.toggle('hidden');
         }
 
-        async function loadText(fileName, parentFolder) {
-            const filePath = `${baseFolderPath}${parentFolder}/${fileName}`;
+        async function loadText(fileName, folderName, lang) {
+            const filePath = `${baseFolderPath}${lang}/${folderName}/${fileName}`; // Correct file path
             try {
                 const response = await fetch(filePath);
                 if (!response.ok) throw new Error(`Could not fetch ${fileName}`);
                 const text = await response.text();
-                document.getElementById('current-file-title').textContent = `Currently opened: ${parentFolder}/${fileName}`;
+                document.getElementById('current-file-title').textContent = `Currently opened: ${lang}/${folderName}/${fileName}`;
                 document.getElementById('current-file-content').textContent = text;
                 document.getElementById('file-content').style.display = 'block';
             } catch (error) {
@@ -99,7 +113,7 @@
                 const resultItem = document.createElement('div');
                 resultItem.textContent = file;
                 resultItem.classList.add('search-result');
-                resultItem.onclick = () => loadText(file, 'SIG1');
+                resultItem.onclick = () => loadText(file, 'SIG1', 'en'); // Adjust based on actual structure
                 searchResults.appendChild(resultItem);
             });
         }
